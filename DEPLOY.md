@@ -114,6 +114,16 @@ Follow the prompts. Vercel will give you a live URL instantly.
 - [ ] Add an `og:image` and switch `twitter:card` back to `summary_large_image`
       (currently `summary`, because there is no image asset)
 
+## Before launch
+
+- [ ] **Restore an intended-use / not-a-medical-device statement.** The footer that
+      carried it was removed (it read as the page ending early), so the page
+      currently makes no statement about who the tool is for or that it is not a
+      medical device — while the app itself opens with a blocking HCP attestation.
+      Source text: `DISCLAIMER.short` + the audience clause of `INTENDED_USE` in
+      `web/src/lib/legal.ts`.
+- [ ] **Restore the copyright** (`COPYRIGHT` in `web/src/lib/site.ts`).
+
 ## Deliberately absent
 
 - **No links to /about, /methodology, /terms, /privacy, /contact.** That language is
