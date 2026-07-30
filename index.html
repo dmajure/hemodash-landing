@@ -424,7 +424,7 @@
     /* ── "Built for" strip ── */
     .audience {
       text-align: center;
-      padding: 8px 0 56px;
+      padding: 8px 0 32px;
     }
     .audience h2 {
       font-size: 0.6875rem;
@@ -449,8 +449,15 @@
       background: var(--hd-surface);
     }
 
-    /* No footer: the surface-coloured band with its border-top read as the page
-       ending early. The page now closes on the "Built for" strip. */
+    /* The copyright closes the page. Still no footer element: what read as the
+       page ending early was the surface-coloured band and its border-top, not the
+       text — so this is a bare centred line on the same canvas, no fill, no rule. */
+    .copyright-line {
+      text-align: center;
+      font-size: 0.6875rem;
+      color: var(--hd-faint);
+      padding-bottom: 48px;
+    }
 
     /* ── Responsive ── */
     /* Cards go 2-up well before the hero splits — a tablet has room for the grid
@@ -633,6 +640,9 @@
         <span>Critical care nurses</span>
       </div>
     </section>
+
+    <!-- COPYRIGHT verbatim from web/src/lib/site.ts -->
+    <p class="copyright-line">&copy; 2026 HemoDash &middot; All Rights Reserved</p>
 
   </div>
 </main>

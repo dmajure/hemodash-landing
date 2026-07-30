@@ -121,7 +121,10 @@ Follow the prompts. Vercel will give you a live URL instantly.
       `web/src/lib/legal.ts`). It is a SIBLING of `#formNote`, not a child: the
       success handler hides the note, and this statement must survive a signup.
       The audience clause lives in the waitlist note above it.
-- [ ] **Restore the copyright** (`COPYRIGHT` in `web/src/lib/site.ts`).
+- [x] **Copyright** — restored as `.copyright-line`, a bare centred line closing the
+      page (`COPYRIGHT` verbatim from `web/src/lib/site.ts`). No `<footer>`, no
+      surface fill, no border-top: the band and the rule are what read as the page
+      ending early, not the text.
 
 ## Deliberately absent
 
