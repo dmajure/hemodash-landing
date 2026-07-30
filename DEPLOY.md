@@ -116,12 +116,11 @@ Follow the prompts. Vercel will give you a live URL instantly.
 
 ## Before launch
 
-- [ ] **Restore an intended-use / not-a-medical-device statement.** The footer that
-      carried it was removed (it read as the page ending early), so the page
-      currently makes no statement about who the tool is for or that it is not a
-      medical device — while the app itself opens with a blocking HCP attestation.
-      Source text: `DISCLAIMER.short` + the audience clause of `INTENDED_USE` in
-      `web/src/lib/legal.ts`.
+- [x] **Intended-use / not-a-medical-device statement** — restored under the
+      waitlist note as `.disclaimer-note` (`DISCLAIMER.short` verbatim from
+      `web/src/lib/legal.ts`). It is a SIBLING of `#formNote`, not a child: the
+      success handler hides the note, and this statement must survive a signup.
+      The audience clause lives in the waitlist note above it.
 - [ ] **Restore the copyright** (`COPYRIGHT` in `web/src/lib/site.ts`).
 
 ## Deliberately absent

@@ -210,6 +210,15 @@
       margin-top: 12px;
       max-width: 30rem;
     }
+    /* Claim-limiting statement under the form. No rule or band above it — the
+       removed footer's border-top is exactly what read as the page ending. */
+    .disclaimer-note {
+      font-size: 0.75rem;
+      line-height: 1.6;
+      color: var(--hd-muted);
+      margin-top: 20px;
+      max-width: 30rem;
+    }
     .form-msg {
       display: none;
       max-width: 30rem;
@@ -507,6 +516,15 @@
         <p class="form-msg error" id="errorMsg" role="alert"></p>
         <p class="form-msg success" id="successMsg" role="status">
           You're on the list. We'll be in touch at launch.
+        </p>
+        <!-- DISCLAIMER.short, verbatim from web/src/lib/legal.ts. Deliberately a
+             SIBLING of #formNote rather than part of it: the success handler hides
+             the note, and this statement must survive a successful signup. The
+             audience clause ("licensed clinicians and medical trainees") is already
+             carried by the note above, so it isn't repeated here. -->
+        <p class="disclaimer-note">
+          Clinical decision support tool &mdash; not a medical device. All outputs
+          must be independently verified by the treating clinician.
         </p>
       </div>
 
