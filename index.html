@@ -575,10 +575,18 @@
           <svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6"/><path d="M9 17h4"/></svg>
         </div>
         <h3>Traceable to the source</h3>
+        <!-- "cited sources", not "primary sources": 591 is the count of distinct
+             pubmed: ids in the shipped KB profiles — i.e. the sources reachable
+             from a number in the app. The validation program's working library is
+             larger (~800 papers filed in reference/), but a paper that backs no
+             shipped profile can't be clicked through to, so it doesn't belong in a
+             traceability claim. Regenerate with:
+             grep -ohE 'pubmed: *"[0-9]+"' engine/hemodash_engine/kb/*.yaml \
+               | grep -oE "[0-9]+" | sort -u | wc -l -->
         <p class="evidence-line">
           <span class="num">34</span> parameters &middot;
           <span class="num">235</span> context-specific interpretations &middot;
-          <span class="num">591</span> primary sources
+          <span class="num">591</span> cited sources
         </p>
         <p>
           Every threshold and interpretation is traced to the primary literature, with
