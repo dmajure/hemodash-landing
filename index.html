@@ -440,26 +440,8 @@
       background: var(--hd-surface);
     }
 
-    /* ── Footer — mirrors web/src/components/SiteFooter.tsx ── */
-    footer.site {
-      margin-top: auto;
-      border-top: 1px solid var(--hd-border);
-      background: var(--hd-surface);
-    }
-    .footer-inner {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      padding: 32px 24px;
-      font-size: 0.75rem;
-      line-height: 1.65;
-      color: var(--hd-muted);
-    }
-    .footer-inner .intended-use { max-width: 48rem; }
-    .footer-inner .copyright {
-      border-top: 1px solid var(--hd-border);
-      padding-top: 18px;
-    }
+    /* No footer: the surface-coloured band with its border-top read as the page
+       ending early. The page now closes on the "Built for" strip. */
 
     /* ── Responsive ── */
     /* Cards go 2-up well before the hero splits — a tablet has room for the grid
@@ -636,17 +618,6 @@
 
   </div>
 </main>
-
-<footer class="site">
-  <div class="container footer-inner">
-    <p class="intended-use">
-      Clinical decision support tool &mdash; not a medical device. All outputs must be
-      independently verified by the treating clinician. Intended for licensed
-      healthcare professionals and medical trainees.
-    </p>
-    <p class="copyright">&copy; 2026 HemoDash &middot; All Rights Reserved</p>
-  </div>
-</footer>
 
 <script>
   // Submit without a page refresh. Success replaces the form; failure shows an
