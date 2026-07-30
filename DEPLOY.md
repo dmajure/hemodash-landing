@@ -1,19 +1,28 @@
 # HemoDash Landing Page — Deployment Guide
 
-## Before You Deploy: Set Up Email Capture (5 minutes)
+## What this repo is
 
-The form currently points to `https://formspree.io/f/YOUR_FORM_ID`. You need a free Formspree account to collect signups.
+Two files, no build step:
 
-1. Go to **https://formspree.io** and sign up (free tier allows 50 submissions/month — enough for early days).
-2. Create a new form. Formspree will give you an endpoint like `https://formspree.io/f/xABcdEfG`.
-3. Open `index.html` and find this line:
-   ```
-   action="https://formspree.io/f/YOUR_FORM_ID"
-   ```
-4. Replace `YOUR_FORM_ID` with your actual form ID (e.g., `xABcdEfG`).
-5. Save the file.
+- `index.html` — the whole page, self-contained (inline CSS + one inline script).
+- `icon.svg` — the favicon, copied verbatim from the app's `web/public/icon.svg`.
 
-**Alternative:** If you'd rather use Mailchimp, ConvertKit, or another email service, replace the entire `<form>` block with their embedded form code.
+The design tokens, typefaces, wordmark, and PV-loop animation are **hand-ported
+from the HemoDash app** so the two surfaces read as one product. The `:root` block
+in `index.html` names its source (`web/src/app/globals.css`), and the PV-loop path
+and marker keyframes are copied verbatim from `web/src/lib/loadingLoop.ts`. There
+is no automatic sync — re-port by hand if the app's tokens change.
+
+## Email capture
+
+The waitlist form already posts to a live Formspree endpoint
+(`https://formspree.io/f/mqewajzd`). Nothing to configure. Submissions land in
+that Formspree inbox; the free tier allows 50/month.
+
+Success and failure both render inline in the page — no `alert()`, no redirect.
+
+**Alternative:** to switch to Mailchimp, ConvertKit, or similar, replace the
+`<form>` block and delete the `<script>` at the bottom of `index.html`.
 
 ---
 
@@ -101,4 +110,15 @@ Follow the prompts. Vercel will give you a live URL instantly.
 - [ ] Test on mobile (iPhone and Android)
 - [ ] Verify hemodynamics.app redirects to hemodash.com
 - [ ] Submit to Google Search Console (search.google.com/search-console) so Google indexes your page
-- [ ] Add a favicon (replace the default with your HemoDash logo when ready)
+- [x] Favicon — `icon.svg`, the app's own mark
+- [ ] Add an `og:image` and switch `twitter:card` back to `summary_large_image`
+      (currently `summary`, because there is no image asset)
+
+## Deliberately absent
+
+- **No links to /about, /methodology, /terms, /privacy, /contact.** That language is
+  pending attorney review (`LEGAL_DRAFT` is still `true` in the app), and the app
+  itself is not deployed, so those paths would 404. Wire them in the same change
+  that points this domain at the deployed app.
+- **No social links.** Add when the LinkedIn and Bluesky profiles are confirmed live.
+- **No "open the app" CTA.** The page is pre-launch; the waitlist is the only action.

@@ -3,242 +3,426 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HemoDash — Hemodynamic Calculator for the Modern Clinician</title>
-  <meta name="description" content="The hemodynamics app built for cath lab, ICU, and OR professionals. Beautiful UI, offline calculations, AI-assisted interpretation. Coming soon.">
-  <meta property="og:title" content="HemoDash — Hemodynamic Calculator for the Modern Clinician">
-  <meta property="og:description" content="Purpose-built hemodynamic calculations with AI-assisted interpretation. Designed for cardiology fellows, intensivists, and cath lab professionals.">
+  <title>HemoDash — Hemodynamics in Context</title>
+  <meta name="description" content="A hemodynamic assessment tool for advanced heart failure and cardiogenic shock. It tells you which parameters are valid in your patient's clinical context — and what they mean there. For licensed clinicians. Coming soon.">
+  <meta property="og:title" content="HemoDash — Hemodynamics in Context">
+  <meta property="og:description" content="Not just the calculation. HemoDash tells you which hemodynamic parameters are valid in your patient's clinical context — and what they mean there. Every threshold traced to the primary literature. For licensed clinicians.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://hemodash.com">
-  <meta name="twitter:card" content="summary_large_image">
+  <!-- summary, not summary_large_image: there is no og:image asset yet (see DEPLOY.md) -->
+  <meta name="twitter:card" content="summary">
+  <meta name="theme-color" content="#0e5f58">
+  <link rel="icon" href="/icon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- The app's three families (web/src/app/layout.tsx): Fraunces display serif,
+       Hanken Grotesk UI sans, IBM Plex Mono for numerals. The app self-hosts these
+       via next/font because it must run offline; this page is online-only, so the
+       CDN is fine. -->
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Hanken+Grotesk:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-    :root {
-      --navy: #0B1426;
-      --navy-light: #111D33;
-      --teal: #00B4D8;
-      --teal-glow: rgba(0, 180, 216, 0.15);
-      --coral: #FF6B6B;
-      --white: #F0F4F8;
-      --gray: #8892A4;
-      --card-bg: rgba(17, 29, 51, 0.7);
-    }
+    /* ── HemoDash design tokens ───────────────────────────────────────────────
+       Copied from web/src/app/globals.css (the warm-paper / teal system) so this
+       page reads as the same product as the app. Keep in sync by hand: this file
+       is a standalone static page, not part of the Next.js build.
 
-    html { scroll-behavior: smooth; }
+       Deliberately NOT ported: the severity tokens (--hd-normal-*, --hd-caution-*,
+       --hd-severe-*). globals.css warns that decorative use of clinical severity
+       color makes a graphic read as a clinical signal; nothing on a marketing
+       page should. */
+    :root {
+      /* surfaces & ink */
+      --hd-bg: #f4f0e8;          /* canvas (warm paper) */
+      --hd-surface: #fcfaf5;     /* card / bar surface */
+      --hd-fill: #f7f3ea;        /* subtle fill / icon tile */
+      --hd-ink: #1c1b18;
+      --hd-ink-soft: #3c3a35;
+      --hd-muted: #7a776e;
+      --hd-faint: #a6a299;
+      --hd-label: #a6a299;
+      --hd-border: #e3ddd0;
+      --hd-border-strong: #d2caba;
+
+      /* accent (teal) */
+      --hd-brand: #0e5f58;
+      --hd-accent-deep: #0a4742;
+
+      /* the pulsing "o" — deep arterial red, hue-complement of the teal "Dash" */
+      --hd-pulse: #9e2b30;
+
+      /* PV-loop fill (the app's info tint, used for the loop's interior only) */
+      --hd-info-bg: #ccdaeb;
+
+      /* elevation */
+      --hd-shadow: 0 1px 2px rgba(28, 27, 24, 0.04), 0 8px 24px rgba(28, 27, 24, 0.06);
+
+      --font-display: 'Fraunces', Georgia, serif;
+      --font-ui: 'Hanken Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
+    }
 
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--navy);
-      color: var(--white);
+      font-family: var(--font-ui);
+      background: var(--hd-bg);
+      color: var(--hd-ink);
       min-height: 100vh;
-      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
       -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
     }
 
-    /* ── Animated waveform background ── */
-    .bg-waves {
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      z-index: 0;
-      overflow: hidden;
-      pointer-events: none;
-    }
-    .bg-waves svg {
-      position: absolute;
-      bottom: 0;
-      width: 200%;
-      height: 320px;
-      opacity: 0.07;
-    }
-    .bg-waves .wave1 { animation: drift 18s linear infinite; }
-    .bg-waves .wave2 { animation: drift 24s linear infinite reverse; opacity: 0.04; }
-    @keyframes drift {
-      from { transform: translateX(0); }
-      to   { transform: translateX(-50%); }
-    }
-
-    /* ── Layout ── */
     .container {
-      position: relative;
-      z-index: 1;
-      max-width: 720px;
+      width: 100%;
+      max-width: 1024px;   /* the app's max-w-5xl shell (TopBar / SiteFooter) */
       margin: 0 auto;
       padding: 0 24px;
     }
 
-    /* ── Nav ── */
-    nav {
+    /* ── Top bar — mirrors web/src/components/TopBar.tsx ── */
+    header.topbar {
+      border-bottom: 1px solid var(--hd-border);
+      background: var(--hd-surface);
+    }
+    .topbar-inner {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 28px 0;
+      gap: 24px;
+      padding: 12px 24px;
     }
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-weight: 700;
-      font-size: 1.25rem;
-      letter-spacing: -0.02em;
-      color: var(--white);
+    .wordmark {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 20px;
+      letter-spacing: -0.025em;   /* the app's tracking-tight at 20px */
+      color: var(--hd-ink);
       text-decoration: none;
     }
-    .logo-icon {
-      width: 36px;
-      height: 36px;
-      border-radius: 10px;
-      background: linear-gradient(135deg, var(--teal), #0077B6);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .logo-icon svg { width: 20px; height: 20px; }
+    .wordmark .brand { color: var(--hd-brand); }
     .badge {
       font-size: 0.65rem;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      background: var(--teal-glow);
-      color: var(--teal);
-      padding: 4px 10px;
+      color: var(--hd-brand);
+      background: var(--hd-fill);
+      padding: 5px 11px;
       border-radius: 100px;
-      border: 1px solid rgba(0,180,216,0.2);
+      border: 1px solid var(--hd-border-strong);
+      white-space: nowrap;
+    }
+
+    /* ── Heartbeat: the wordmark "o" ─────────────────────────────────────────
+       The app phase-locks every "o" to one animated custom property (--hd-beat)
+       so multiple marks never drift apart. This page has a single "o", so it
+       uses the app's simpler .hd-splash-o variant: transform keyframes directly,
+       fixed 60 BPM. Same lub-dub shape and the same event alignment as the app —
+       S1 "lub" at the start of the beat, S2 "dub" at ~35% (end-systole / aortic
+       closure) — which keeps it in step with the PV-loop marker below. */
+    .hd-pulse-o {
+      display: inline-block;
+      color: var(--hd-pulse);
+      transform-origin: center 60%;
+      will-change: transform;
+      animation: hd-beat 1s ease-in-out infinite;
+    }
+    @keyframes hd-beat {
+      0%   { transform: scale(1);    }  /* end-diastole — S1 "lub" begins */
+      5%   { transform: scale(1.13); }  /* lub peak (isovolumic contraction) */
+      13%  { transform: scale(1);    }
+      30%  { transform: scale(1);    }  /* quiet ejection */
+      35%  { transform: scale(1.06); }  /* end-systole — S2 "dub" */
+      42%  { transform: scale(1);    }
+      100% { transform: scale(1);    }  /* diastolic filling */
     }
 
     /* ── Hero ── */
+    main { flex: 1; }
     .hero {
-      text-align: center;
-      padding: 80px 0 48px;
+      display: grid;
+      grid-template-columns: 1fr;
+      align-items: center;
+      gap: 40px;
+      padding: 64px 0 24px;
     }
     .hero h1 {
-      font-size: clamp(2rem, 5vw, 3rem);
-      font-weight: 700;
-      line-height: 1.15;
-      letter-spacing: -0.03em;
+      font-family: var(--font-display);
+      font-size: clamp(2.25rem, 5.5vw, 3.25rem);
+      font-weight: 600;
+      line-height: 1.1;
+      letter-spacing: -0.025em;
       margin-bottom: 20px;
     }
-    .hero h1 .accent { color: var(--teal); }
-    .hero p {
-      font-size: 1.125rem;
-      line-height: 1.7;
-      color: var(--gray);
-      max-width: 540px;
-      margin: 0 auto 40px;
+    .hero h1 .accent { color: var(--hd-brand); }
+    .hero .claim {
+      font-size: 1.0625rem;
+      line-height: 1.65;
+      color: var(--hd-ink-soft);
+      max-width: 34rem;
+      margin-bottom: 32px;
     }
 
-    /* ── Email form ── */
+    /* ── Waitlist form ── */
     .signup-form {
       display: flex;
       gap: 10px;
-      max-width: 460px;
-      margin: 0 auto;
+      max-width: 30rem;
     }
     .signup-form input {
       flex: 1;
-      padding: 14px 18px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.1);
-      background: var(--navy-light);
-      color: var(--white);
-      font-size: 0.95rem;
+      min-width: 0;
+      padding: 12px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--hd-border-strong);
+      background: var(--hd-surface);
+      color: var(--hd-ink);
+      font-size: 0.9375rem;
       font-family: inherit;
       outline: none;
-      transition: border-color 0.2s;
+      transition: border-color 0.15s, box-shadow 0.15s;
     }
-    .signup-form input::placeholder { color: var(--gray); }
-    .signup-form input:focus { border-color: var(--teal); }
+    .signup-form input::placeholder { color: var(--hd-faint); }
+    .signup-form input:focus {
+      border-color: var(--hd-brand);
+      box-shadow: 0 0 0 3px rgba(14, 95, 88, 0.12);
+    }
     .signup-form button {
-      padding: 14px 28px;
-      border-radius: 12px;
+      padding: 12px 20px;
+      border-radius: 8px;
       border: none;
-      background: linear-gradient(135deg, var(--teal), #0077B6);
+      background: var(--hd-brand);
       color: #fff;
-      font-size: 0.95rem;
-      font-weight: 600;
+      font-size: 0.9375rem;
+      font-weight: 500;
       font-family: inherit;
       cursor: pointer;
       white-space: nowrap;
-      transition: transform 0.15s, box-shadow 0.15s;
+      transition: background-color 0.15s;
     }
-    .signup-form button:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 24px rgba(0,180,216,0.3);
-    }
+    .signup-form button:hover { background: var(--hd-accent-deep); }
+    .signup-form button:disabled { opacity: 0.5; cursor: default; }
     .form-note {
-      text-align: center;
-      font-size: 0.8rem;
-      color: var(--gray);
+      font-size: 0.8125rem;
+      color: var(--hd-muted);
+      margin-top: 12px;
+      max-width: 30rem;
+    }
+    .form-msg {
+      display: none;
+      max-width: 30rem;
+      padding: 14px 16px;
+      border-radius: 8px;
+      font-size: 0.9375rem;
+      line-height: 1.5;
+    }
+    .form-msg.success {
+      background: var(--hd-surface);
+      border: 1px solid var(--hd-brand);
+      color: var(--hd-brand);
+      font-weight: 500;
+    }
+    .form-msg.error {
+      background: var(--hd-fill);
+      border: 1px solid var(--hd-border-strong);
+      color: var(--hd-ink-soft);
       margin-top: 12px;
     }
-    .success-msg {
-      display: none;
-      text-align: center;
-      padding: 16px;
-      background: rgba(0,180,216,0.1);
-      border: 1px solid rgba(0,180,216,0.25);
-      border-radius: 12px;
-      color: var(--teal);
-      font-weight: 500;
-      max-width: 460px;
-      margin: 0 auto;
+
+    /* ── PV-loop figure ──────────────────────────────────────────────────────
+       The app's own artwork, lifted from web/src/lib/loadingLoop.ts (a baked
+       transcription of the engine's textbook-normal loop: EDV 120, ESV 50,
+       EDP 10, DBP 80, SBP 120, Pes 93) and composed as
+       web/src/components/PvLoopAnimation.tsx composes it. The marker's
+       coordinates are baked in px, so the whole graphic scales as one unit
+       (--s) to keep the marker on the outline. */
+    /* --s lives on the block so BOTH the graphic and its caption inherit it;
+       setting it on .pv-figure alone would leave var(--s) undefined in the
+       sibling caption, whose max-width would then fall back to none and widen
+       the hero's grid track. */
+    .pv-block { --s: 1; }
+    .pv-figure {
+      width: calc(320px * var(--s));
+      height: calc(240px * var(--s));
+      max-width: 100%;
+    }
+    .pv-inner {
+      position: relative;
+      width: 320px;
+      height: 240px;
+      transform-origin: top left;
+      transform: scale(var(--s));
+    }
+    .pv-caption {
+      font-size: 0.75rem;
+      line-height: 1.5;
+      color: var(--hd-faint);
+      max-width: calc(320px * var(--s));
+      margin-top: 4px;
+    }
+    .hd-splash-marker {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 12px;
+      height: 12px;
+      margin: -6px 0 0 -6px;
+      border-radius: 50%;
+      background: var(--hd-pulse);
+      will-change: transform;
+      animation: hd-splash-marker 1s linear infinite;
+    }
+    /* Baked keyframes — copied verbatim from loadingLoop.ts MARKER_CSS.
+       Event-aligned to the "o": end-diastole at 0%, end-systole at 38%. */
+    @keyframes hd-splash-marker {
+      0.00% { transform: translate(276.14px, 184.31px); }
+      2.08% { transform: translate(276.14px, 169.57px); }
+      3.82% { transform: translate(276.14px, 157.28px); }
+      5.91% { transform: translate(276.14px, 142.54px); }
+      7.65% { transform: translate(276.14px, 130.25px); }
+      9.73% { transform: translate(276.14px, 115.51px); }
+      11.47% { transform: translate(276.14px, 103.22px); }
+      13.55% { transform: translate(276.14px, 88.48px); }
+      14.72% { transform: translate(275.65px, 80.25px); }
+      15.88% { transform: translate(274.17px, 72.2px); }
+      17.02% { transform: translate(271.7px, 64.53px); }
+      18.14% { transform: translate(268.25px, 57.4px); }
+      19.52% { transform: translate(262.54px, 49.5px); }
+      20.62% { transform: translate(256.86px, 44.16px); }
+      21.74% { transform: translate(250.2px, 39.83px); }
+      22.92% { transform: translate(242.55px, 36.6px); }
+      24.17% { transform: translate(233.91px, 34.55px); }
+      25.43% { transform: translate(225.04px, 33.73px); }
+      26.62% { transform: translate(216.62px, 33.75px); }
+      27.75% { transform: translate(208.63px, 33.9px); }
+      28.82% { transform: translate(201.1px, 34.15px); }
+      29.82% { transform: translate(194.0px, 34.51px); }
+      30.99% { transform: translate(185.75px, 35.1px); }
+      31.86% { transform: translate(179.66px, 35.68px); }
+      32.67% { transform: translate(174.0px, 36.36px); }
+      33.41% { transform: translate(168.79px, 37.13px); }
+      34.10% { transform: translate(164.02px, 37.99px); }
+      34.72% { transform: translate(159.7px, 38.93px); }
+      35.29% { transform: translate(155.82px, 39.94px); }
+      35.80% { transform: translate(152.38px, 41.02px); }
+      36.25% { transform: translate(149.39px, 42.16px); }
+      36.65% { transform: translate(146.84px, 43.35px); }
+      37.07% { transform: translate(144.27px, 44.9px); }
+      37.36% { transform: translate(142.72px, 46.18px); }
+      37.60% { transform: translate(141.61px, 47.49px); }
+      37.81% { transform: translate(140.95px, 48.81px); }
+      38.00% { transform: translate(140.73px, 50.14px); }
+      42.31% { transform: translate(140.73px, 69.93px); }
+      45.90% { transform: translate(140.73px, 86.42px); }
+      49.50% { transform: translate(140.73px, 102.91px); }
+      53.81% { transform: translate(140.73px, 122.7px); }
+      58.12% { transform: translate(140.73px, 142.49px); }
+      61.71% { transform: translate(140.73px, 158.98px); }
+      65.31% { transform: translate(140.73px, 175.47px); }
+      69.62% { transform: translate(140.73px, 195.26px); }
+      70.22% { transform: translate(140.73px, 198.0px); }
+      71.41% { transform: translate(146.2px, 198.0px); }
+      72.60% { transform: translate(151.67px, 198.0px); }
+      73.79% { transform: translate(157.14px, 198.0px); }
+      74.98% { transform: translate(162.61px, 198.0px); }
+      76.18% { transform: translate(168.08px, 198.0px); }
+      77.37% { transform: translate(173.55px, 197.55px); }
+      78.57% { transform: translate(179.03px, 197.42px); }
+      79.76% { transform: translate(184.5px, 197.27px); }
+      80.95% { transform: translate(189.97px, 197.09px); }
+      82.14% { transform: translate(195.44px, 196.87px); }
+      83.34% { transform: translate(200.91px, 196.61px); }
+      84.53% { transform: translate(206.38px, 196.3px); }
+      85.43% { transform: translate(210.49px, 196.03px); }
+      86.62% { transform: translate(215.96px, 195.63px); }
+      87.82% { transform: translate(221.43px, 195.15px); }
+      89.02% { transform: translate(226.9px, 194.6px); }
+      90.22% { transform: translate(232.37px, 193.96px); }
+      91.42% { transform: translate(237.84px, 193.22px); }
+      92.63% { transform: translate(243.31px, 192.38px); }
+      93.84% { transform: translate(248.79px, 191.42px); }
+      95.05% { transform: translate(254.26px, 190.32px); }
+      96.28% { transform: translate(259.73px, 189.08px); }
+      97.51% { transform: translate(265.2px, 187.67px); }
+      98.75% { transform: translate(270.67px, 186.09px); }
+      100% { transform: translate(276.14px, 184.31px); }
     }
 
-    /* ── Feature cards ── */
+    /* ── Capability cards ── */
     .features {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr;
       gap: 16px;
-      padding: 48px 0;
+      padding: 40px 0;
     }
     .feature-card {
-      background: var(--card-bg);
-      border: 1px solid rgba(255,255,255,0.06);
+      background: var(--hd-surface);
+      border: 1px solid var(--hd-border);
       border-radius: 16px;
-      padding: 28px 24px;
-      backdrop-filter: blur(12px);
-      transition: border-color 0.25s, transform 0.25s;
+      padding: 24px;
+      box-shadow: var(--hd-shadow);
+      transition: border-color 0.2s, translate 0.2s;
     }
     .feature-card:hover {
-      border-color: rgba(0,180,216,0.2);
-      transform: translateY(-2px);
+      border-color: var(--hd-border-strong);
+      translate: 0 -2px;
     }
     .feature-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
-      background: var(--teal-glow);
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      background: var(--hd-fill);
+      border: 1px solid var(--hd-border);
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
     }
-    .feature-icon svg { width: 20px; height: 20px; stroke: var(--teal); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .feature-icon svg {
+      width: 19px; height: 19px;
+      stroke: var(--hd-brand);
+      fill: none;
+      stroke-width: 1.7;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
     .feature-card h3 {
-      font-size: 1rem;
+      font-family: var(--font-display);
+      font-size: 1.0625rem;
       font-weight: 600;
-      margin-bottom: 8px;
       letter-spacing: -0.01em;
+      margin-bottom: 8px;
     }
     .feature-card p {
       font-size: 0.875rem;
-      line-height: 1.6;
-      color: var(--gray);
+      line-height: 1.65;
+      color: var(--hd-muted);
+    }
+    .evidence-line {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      line-height: 1.7;
+      color: var(--hd-muted);
+      margin-bottom: 8px;
+    }
+    .evidence-line .num {
+      font-weight: 500;
+      color: var(--hd-ink);
     }
 
-    /* ── Audience strip ── */
+    /* ── "Built for" strip ── */
     .audience {
       text-align: center;
-      padding: 32px 0 64px;
+      padding: 8px 0 56px;
     }
-    .audience p {
-      font-size: 0.85rem;
-      color: var(--gray);
+    .audience h2 {
+      font-size: 0.6875rem;
+      color: var(--hd-label);
       text-transform: uppercase;
       letter-spacing: 0.1em;
-      font-weight: 500;
+      font-weight: 600;
       margin-bottom: 14px;
     }
     .audience-tags {
@@ -248,150 +432,255 @@
       gap: 8px;
     }
     .audience-tags span {
-      font-size: 0.8rem;
-      padding: 6px 14px;
+      font-size: 0.8125rem;
+      padding: 6px 13px;
       border-radius: 100px;
-      border: 1px solid rgba(255,255,255,0.1);
-      color: var(--gray);
-      background: var(--card-bg);
+      border: 1px solid var(--hd-border);
+      color: var(--hd-muted);
+      background: var(--hd-surface);
     }
 
-    /* ── Footer ── */
-    footer {
-      text-align: center;
-      padding: 32px 0;
-      border-top: 1px solid rgba(255,255,255,0.06);
-      font-size: 0.8rem;
-      color: var(--gray);
+    /* ── Footer — mirrors web/src/components/SiteFooter.tsx ── */
+    footer.site {
+      margin-top: auto;
+      border-top: 1px solid var(--hd-border);
+      background: var(--hd-surface);
+    }
+    .footer-inner {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      padding: 32px 24px;
+      font-size: 0.75rem;
+      line-height: 1.65;
+      color: var(--hd-muted);
+    }
+    .footer-inner .intended-use { max-width: 48rem; }
+    .footer-inner .copyright {
+      border-top: 1px solid var(--hd-border);
+      padding-top: 18px;
     }
 
     /* ── Responsive ── */
-    @media (max-width: 560px) {
-      .hero { padding: 56px 0 32px; }
+    /* Cards go 2-up well before the hero splits — a tablet has room for the grid
+       long before it has room for text beside the 320px-wide loop figure. */
+    @media (min-width: 660px) {
+      .features { grid-template-columns: 1fr 1fr; }
+    }
+    @media (min-width: 900px) {
+      .hero {
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 56px;
+        padding: 80px 0 32px;
+      }
+    }
+    @media (max-width: 480px) {
+      .hero { padding: 44px 0 16px; }
       .signup-form { flex-direction: column; }
       .signup-form button { width: 100%; }
-      .features { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 380px) {
+      .pv-block { --s: 0.85; }
+    }
+
+    /* Freeze both animations; park the marker at end-diastole. Matches the app's
+       reduced-motion paths in globals.css and loadingLoop.ts. */
+    @media (prefers-reduced-motion: reduce) {
+      .hd-pulse-o { animation: none; transform: none; }
+      .hd-splash-marker { animation: none; transform: translate(276.14px, 184.31px); }
+      .feature-card { transition: none; }
     }
   </style>
 </head>
 <body>
 
-<!-- Animated waveform background -->
-<div class="bg-waves">
-  <svg class="wave1" viewBox="0 0 2400 320" preserveAspectRatio="none">
-    <path d="M0,160 C200,80 400,240 600,160 C800,80 1000,240 1200,160 C1400,80 1600,240 1800,160 C2000,80 2200,240 2400,160 L2400,320 L0,320 Z" fill="var(--teal)"/>
-  </svg>
-  <svg class="wave2" viewBox="0 0 2400 320" preserveAspectRatio="none">
-    <path d="M0,200 C300,120 500,280 800,200 C1100,120 1300,280 1600,200 C1900,120 2100,280 2400,200 L2400,320 L0,320 Z" fill="var(--teal)"/>
-  </svg>
-</div>
-
-<div class="container">
-
-  <!-- Nav -->
-  <nav>
-    <a href="/" class="logo">
-      <div class="logo-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 12h4l3-9 4 18 3-9h4"/>
-        </svg>
-      </div>
-      HemoDash
-    </a>
+<header class="topbar">
+  <div class="container topbar-inner">
+    <a href="/" class="wordmark">Hem<span class="hd-pulse-o">o</span><span class="brand">Dash</span></a>
     <span class="badge">Coming Soon</span>
-  </nav>
+  </div>
+</header>
 
-  <!-- Hero -->
-  <section class="hero">
-    <h1>Hemodynamics,<br><span class="accent">reimagined.</span></h1>
-    <p>The first hemodynamic calculator built for how you actually work. Beautiful interface, instant offline results, and AI-assisted clinical interpretation &mdash; from the cath lab to the ICU.</p>
+<main>
+  <div class="container">
 
-    <form class="signup-form" id="signupForm" action="https://formspree.io/f/mqewajzd" method="POST">
-      <input type="email" name="email" placeholder="Enter your email for early access" required autocomplete="email">
-      <button type="submit">Notify Me</button>
-    </form>
-    <p class="form-note">Join the waitlist. No spam, just launch updates.</p>
-    <div class="success-msg" id="successMsg">You're on the list. We'll be in touch soon.</div>
-  </section>
+    <!-- Hero -->
+    <section class="hero">
+      <div>
+        <h1>Hemodynamics,<br><span class="accent">in context.</span></h1>
+        <p class="claim">
+          HemoDash doesn't just calculate hemodynamic parameters. It tells you which
+          ones are valid in your patient's clinical context &mdash; and what they mean
+          there.
+        </p>
 
-  <!-- Features -->
-  <section class="features">
-    <div class="feature-card">
-      <div class="feature-icon">
-        <svg viewBox="0 0 24 24"><path d="M3 12h4l3-9 4 18 3-9h4"/></svg>
+        <form class="signup-form" id="signupForm" action="https://formspree.io/f/mqewajzd" method="POST">
+          <input type="email" name="email" placeholder="Your email for early access" required autocomplete="email" aria-label="Email address">
+          <button type="submit">Notify me</button>
+        </form>
+        <p class="form-note" id="formNote">
+          Join the waitlist &mdash; launch updates only. For licensed clinicians and
+          medical trainees.
+        </p>
+        <p class="form-msg error" id="errorMsg" role="alert"></p>
+        <p class="form-msg success" id="successMsg" role="status">
+          You're on the list. We'll be in touch at launch.
+        </p>
       </div>
-      <h3>Every Formula You Need</h3>
-      <p>SVR, PVR, cardiac output, valve areas, shunt ratios, risk scores &mdash; all in one place, with published normal ranges.</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-      </div>
-      <h3>Works Offline</h3>
-      <p>Full functionality without internet. Designed for cath labs, ORs, and ICUs where connectivity is unreliable.</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon">
-        <svg viewBox="0 0 24 24"><path d="M12 2a4 4 0 0 0-4 4c0 2 2 3 2 6h4c0-3 2-4 2-6a4 4 0 0 0-4-4z"/><line x1="10" y1="16" x2="14" y2="16"/><line x1="10" y1="19" x2="14" y2="19"/></svg>
-      </div>
-      <h3>AI Interpretation</h3>
-      <p>Contextual clinical insights for every result. Differentials, suggested actions, and guideline references &mdash; not just numbers.</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon">
-        <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-      </div>
-      <h3>Every Platform</h3>
-      <p>iOS, Android, and web. Your calculations sync across devices. One account, everywhere you work.</p>
-    </div>
-  </section>
 
-  <!-- Audience -->
-  <section class="audience">
-    <p>Built for</p>
-    <div class="audience-tags">
-      <span>Cardiology Fellows</span>
-      <span>Interventional Cardiologists</span>
-      <span>Intensivists</span>
-      <span>Anesthesiologists</span>
-      <span>Cath Lab Teams</span>
-      <span>Critical Care Nurses</span>
-    </div>
-  </section>
+      <!-- The app's own PV-loop animation (see loadingLoop.ts / PvLoopAnimation.tsx) -->
+      <figure class="pv-block">
+        <div class="pv-figure">
+          <div class="pv-inner">
+            <svg width="320" height="240" viewBox="0 0 320 240" role="img"
+                 aria-label="Estimated left-ventricular pressure–volume loop, animating over the cardiac cycle">
+              <!-- axes, both anchored at the plot origin -->
+              <line x1="44" y1="14" x2="44" y2="198" stroke="var(--hd-border-strong)" stroke-width="1"/>
+              <line x1="44" y1="198" x2="304" y2="198" stroke="var(--hd-border-strong)" stroke-width="1"/>
+              <text x="12" y="106" fill="var(--hd-faint)" font-size="11" text-anchor="middle"
+                    font-family="Hanken Grotesk, sans-serif" transform="rotate(-90 12 106)">Pressure</text>
+              <text x="174" y="228" fill="var(--hd-faint)" font-size="11" text-anchor="middle"
+                    font-family="Hanken Grotesk, sans-serif">Volume</text>
+              <!-- the loop (LOOP_PATH, verbatim from loadingLoop.ts) -->
+              <path d="M 276.14 184.31 L 276.14 169.57 L 276.14 157.28 L 276.14 142.54 L 276.14 130.25 L 276.14 115.51 L 276.14 103.22 L 276.14 88.48 L 275.65 80.25 L 274.17 72.2 L 271.7 64.53 L 268.25 57.4 L 262.54 49.5 L 256.86 44.16 L 250.2 39.83 L 242.55 36.6 L 233.91 34.55 L 225.04 33.73 L 216.62 33.75 L 208.63 33.9 L 201.1 34.15 L 194.0 34.51 L 185.75 35.1 L 179.66 35.68 L 174.0 36.36 L 168.79 37.13 L 164.02 37.99 L 159.7 38.93 L 155.82 39.94 L 152.38 41.02 L 149.39 42.16 L 146.84 43.35 L 144.27 44.9 L 142.72 46.18 L 141.61 47.49 L 140.95 48.81 L 140.73 50.14 L 140.73 69.93 L 140.73 86.42 L 140.73 102.91 L 140.73 122.7 L 140.73 142.49 L 140.73 158.98 L 140.73 175.47 L 140.73 195.26 L 140.73 198.0 L 146.2 198.0 L 151.67 198.0 L 157.14 198.0 L 162.61 198.0 L 168.08 198.0 L 173.55 197.55 L 179.03 197.42 L 184.5 197.27 L 189.97 197.09 L 195.44 196.87 L 200.91 196.61 L 206.38 196.3 L 210.49 196.03 L 215.96 195.63 L 221.43 195.15 L 226.9 194.6 L 232.37 193.96 L 237.84 193.22 L 243.31 192.38 L 248.79 191.42 L 254.26 190.32 L 259.73 189.08 L 265.2 187.67 L 270.67 186.09 Z"
+                    fill="var(--hd-info-bg)" fill-opacity="0.3"
+                    stroke="var(--hd-brand)" stroke-width="2.5" stroke-linejoin="round"/>
+            </svg>
+            <div class="hd-splash-marker" aria-hidden="true"></div>
+          </div>
+        </div>
+        <figcaption class="pv-caption">
+          Estimated LV pressure&ndash;volume loop, derived from the entered hemodynamics.
+        </figcaption>
+      </figure>
+    </section>
 
-  <!-- Footer -->
-  <footer>
-    &copy; 2026 HemoDash. All rights reserved.
-  </footer>
+    <!-- Capabilities -->
+    <section class="features">
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="12" height="12" rx="2.5"/><path d="M9 21h9a3 3 0 0 0 3-3V9"/></svg>
+        </div>
+        <h3>Context, not just calculation</h3>
+        <p>
+          Declare the substrate &mdash; cardiogenic shock, cardiac amyloidosis, PAH,
+          CTEPH, a valve lesion, post-transplant, mechanical support in place &mdash;
+          and every parameter is re-read for that context, including the cases where
+          it does not apply.
+        </p>
+      </div>
 
-</div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6"/><path d="M9 17h4"/></svg>
+        </div>
+        <h3>Traceable to the source</h3>
+        <p class="evidence-line">
+          <span class="num">34</span> parameters &middot;
+          <span class="num">235</span> context-specific interpretations &middot;
+          <span class="num">591</span> primary sources
+        </p>
+        <p>
+          Every threshold and interpretation is traced to the primary literature, with
+          the formula and citation one click from every number.
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><rect x="3" y="4" width="7" height="16" rx="1.5"/><rect x="14" y="4" width="7" height="16" rx="1.5"/><path d="M12 9v6"/></svg>
+        </div>
+        <h3>Compare maneuvers side by side</h3>
+        <p>
+          Enter baseline, a vasodilator challenge, volume loading, or a change in
+          mechanical support as separate conditions, then read the response across
+          them &mdash; including the interpretations that exist only between
+          conditions.
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24"><path d="M18.5 18H7a4 4 0 0 1-.5-7.97"/><path d="M9.5 6.4A5 5 0 0 1 18 9a3.5 3.5 0 0 1 2.5 6"/><path d="M3 3l18 18"/></svg>
+        </div>
+        <h3>Deterministic, and offline</h3>
+        <p>
+          Rule-based logic: the same inputs always produce the same result. No machine
+          learning. The engine runs entirely in your browser, so it works with no
+          signal &mdash; and no patient data leaves the device.
+        </p>
+      </div>
+    </section>
+
+    <!-- Audience -->
+    <section class="audience">
+      <h2>Built for</h2>
+      <div class="audience-tags">
+        <span>Cardiology fellows</span>
+        <span>Interventional cardiology</span>
+        <span>Advanced heart failure &amp; transplant</span>
+        <span>Intensivists</span>
+        <span>Cardiac anesthesiology</span>
+        <span>Cath lab teams</span>
+        <span>Critical care nurses</span>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<footer class="site">
+  <div class="container footer-inner">
+    <p class="intended-use">
+      Clinical decision support tool &mdash; not a medical device. All outputs must be
+      independently verified by the treating clinician. Intended for licensed
+      healthcare professionals and medical trainees.
+    </p>
+    <p class="copyright">&copy; 2026 HemoDash &middot; All Rights Reserved</p>
+  </div>
+</footer>
 
 <script>
-  // Handle form submission with no-refresh UX
+  // Submit without a page refresh. Success replaces the form; failure shows an
+  // inline message and leaves the form in place so the address isn't lost.
+  // (No alert() — a modal dialog blocks the page and is a dead end on mobile.)
   const form = document.getElementById('signupForm');
+  const note = document.getElementById('formNote');
   const successMsg = document.getElementById('successMsg');
+  const errorMsg = document.getElementById('errorMsg');
+  const button = form.querySelector('button');
+
+  function showError(message) {
+    errorMsg.textContent = message;
+    errorMsg.style.display = 'block';
+  }
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const data = new FormData(form);
+    errorMsg.style.display = 'none';
+    button.disabled = true;
+    button.textContent = 'Sending…';
 
     try {
       const res = await fetch(form.action, {
         method: 'POST',
-        body: data,
+        body: new FormData(form),
         headers: { 'Accept': 'application/json' }
       });
 
       if (res.ok) {
         form.style.display = 'none';
-        document.querySelector('.form-note').style.display = 'none';
+        note.style.display = 'none';
         successMsg.style.display = 'block';
-      } else {
-        alert('Something went wrong. Please try again.');
+        return;
       }
+      showError('That didn’t go through. Please try again.');
     } catch (err) {
-      alert('Connection error. Please try again.');
+      showError('Connection error. Please check your network and try again.');
     }
+
+    button.disabled = false;
+    button.textContent = 'Notify me';
   });
 </script>
 
