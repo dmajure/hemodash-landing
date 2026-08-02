@@ -165,79 +165,14 @@
       margin-bottom: 32px;
     }
 
-    /* ── Waitlist form ── */
-    .signup-form {
-      display: flex;
-      gap: 10px;
-      max-width: 30rem;
-    }
-    .signup-form input {
-      flex: 1;
-      min-width: 0;
-      padding: 12px 14px;
-      border-radius: 8px;
-      border: 1px solid var(--hd-border-strong);
-      background: var(--hd-surface);
-      color: var(--hd-ink);
-      font-size: 0.9375rem;
-      font-family: inherit;
-      outline: none;
-      transition: border-color 0.15s, box-shadow 0.15s;
-    }
-    .signup-form input::placeholder { color: var(--hd-faint); }
-    .signup-form input:focus {
-      border-color: var(--hd-brand);
-      box-shadow: 0 0 0 3px rgba(14, 95, 88, 0.12);
-    }
-    .signup-form button {
-      padding: 12px 20px;
-      border-radius: 8px;
-      border: none;
-      background: var(--hd-brand);
-      color: #fff;
-      font-size: 0.9375rem;
-      font-weight: 500;
-      font-family: inherit;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: background-color 0.15s;
-    }
-    .signup-form button:hover { background: var(--hd-accent-deep); }
-    .signup-form button:disabled { opacity: 0.5; cursor: default; }
-    .form-note {
-      font-size: 0.8125rem;
-      color: var(--hd-muted);
-      margin-top: 12px;
-      max-width: 30rem;
-    }
-    /* Claim-limiting statement under the form. No rule or band above it — the
-       removed footer's border-top is exactly what read as the page ending. */
+    /* Claim-limiting statement closing the hero. No rule or band above it — the
+       removed footer's border-top is exactly what read as the page ending. The
+       gap above it comes from .claim's margin-bottom. */
     .disclaimer-note {
       font-size: 0.75rem;
       line-height: 1.6;
       color: var(--hd-muted);
-      margin-top: 20px;
       max-width: 30rem;
-    }
-    .form-msg {
-      display: none;
-      max-width: 30rem;
-      padding: 14px 16px;
-      border-radius: 8px;
-      font-size: 0.9375rem;
-      line-height: 1.5;
-    }
-    .form-msg.success {
-      background: var(--hd-surface);
-      border: 1px solid var(--hd-brand);
-      color: var(--hd-brand);
-      font-weight: 500;
-    }
-    .form-msg.error {
-      background: var(--hd-fill);
-      border: 1px solid var(--hd-border-strong);
-      color: var(--hd-ink-soft);
-      margin-top: 12px;
     }
 
     /* ── PV-loop figure ──────────────────────────────────────────────────────
@@ -474,8 +409,6 @@
     }
     @media (max-width: 480px) {
       .hero { padding: 44px 0 16px; }
-      .signup-form { flex-direction: column; }
-      .signup-form button { width: 100%; }
     }
     @media (max-width: 380px) {
       .pv-block { --s: 0.85; }
@@ -512,26 +445,16 @@
           there.
         </p>
 
-        <form class="signup-form" id="signupForm" action="https://formspree.io/f/mqewajzd" method="POST">
-          <input type="email" name="email" placeholder="Your email for early access" required autocomplete="email" aria-label="Email address">
-          <button type="submit">Notify me</button>
-        </form>
-        <p class="form-note" id="formNote">
-          Join the waitlist &mdash; launch updates only. For licensed clinicians and
-          medical trainees.
-        </p>
-        <p class="form-msg error" id="errorMsg" role="alert"></p>
-        <p class="form-msg success" id="successMsg" role="status">
-          You're on the list. We'll be in touch at launch.
-        </p>
-        <!-- DISCLAIMER.short, verbatim from web/src/lib/legal.ts. Deliberately a
-             SIBLING of #formNote rather than part of it: the success handler hides
-             the note, and this statement must survive a successful signup. The
-             audience clause ("licensed clinicians and medical trainees") is already
-             carried by the note above, so it isn't repeated here. -->
+        <!-- The waitlist form that stood here was removed pending legal review;
+             the page now collects nothing and makes no request of its own (see
+             DEPLOY.md). Its note carried the page's only audience clause, so that
+             clause moved here. The first two sentences are DISCLAIMER.short
+             verbatim from web/src/lib/legal.ts; the third is the audience wording
+             from INTENDED_USE in the same file. -->
         <p class="disclaimer-note">
           Clinical decision support tool &mdash; not a medical device. All outputs
-          must be independently verified by the treating clinician.
+          must be independently verified by the treating clinician. Intended for use
+          by licensed healthcare professionals and medical trainees.
         </p>
       </div>
 
@@ -647,49 +570,7 @@
   </div>
 </main>
 
-<script>
-  // Submit without a page refresh. Success replaces the form; failure shows an
-  // inline message and leaves the form in place so the address isn't lost.
-  // (No alert() — a modal dialog blocks the page and is a dead end on mobile.)
-  const form = document.getElementById('signupForm');
-  const note = document.getElementById('formNote');
-  const successMsg = document.getElementById('successMsg');
-  const errorMsg = document.getElementById('errorMsg');
-  const button = form.querySelector('button');
-
-  function showError(message) {
-    errorMsg.textContent = message;
-    errorMsg.style.display = 'block';
-  }
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    errorMsg.style.display = 'none';
-    button.disabled = true;
-    button.textContent = 'Sending…';
-
-    try {
-      const res = await fetch(form.action, {
-        method: 'POST',
-        body: new FormData(form),
-        headers: { 'Accept': 'application/json' }
-      });
-
-      if (res.ok) {
-        form.style.display = 'none';
-        note.style.display = 'none';
-        successMsg.style.display = 'block';
-        return;
-      }
-      showError('That didn’t go through. Please try again.');
-    } catch (err) {
-      showError('Connection error. Please check your network and try again.');
-    }
-
-    button.disabled = false;
-    button.textContent = 'Notify me';
-  });
-</script>
+<!-- No script: the only one this page ever had submitted the waitlist form. -->
 
 </body>
 </html>

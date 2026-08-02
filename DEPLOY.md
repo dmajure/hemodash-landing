@@ -4,7 +4,7 @@
 
 Two files, no build step:
 
-- `index.html` — the whole page, self-contained (inline CSS + one inline script).
+- `index.html` — the whole page, self-contained (inline CSS, no script).
 - `icon.svg` — the favicon, copied verbatim from the app's `web/public/icon.svg`.
 
 The design tokens, typefaces, wordmark, and PV-loop animation are **hand-ported
@@ -13,16 +13,24 @@ in `index.html` names its source (`web/src/app/globals.css`), and the PV-loop pa
 and marker keyframes are copied verbatim from `web/src/lib/loadingLoop.ts`. There
 is no automatic sync — re-port by hand if the app's tokens change.
 
-## Email capture
+## Email capture — none, deliberately
 
-The waitlist form already posts to a live Formspree endpoint
-(`https://formspree.io/f/mqewajzd`). Nothing to configure. Submissions land in
-that Formspree inbox; the free tier allows 50/month.
+There is **no form on this page and no data collection of any kind.** The page is
+static HTML: it has no `<form>`, no `<input>`, and no `<script>`.
 
-Success and failure both render inline in the page — no `alert()`, no redirect.
+It previously carried a waitlist form posting to a Formspree endpoint
+(`https://formspree.io/f/mqewajzd`). That was **removed pending legal review** to
+keep the pre-launch site from processing personal data before the privacy
+position is settled. Do not reinstate it — here or via Mailchimp, ConvertKit, or
+anything else — until that review clears.
 
-**Alternative:** to switch to Mailchimp, ConvertKit, or similar, replace the
-`<form>` block and delete the `<script>` at the bottom of `index.html`.
+Removing the markup stops new submissions only. Two things live outside this repo
+and must be handled in the Formspree account:
+
+- [ ] Deactivate or delete form `mqewajzd` so the endpoint stops accepting posts
+      (it is public, and anyone with the URL can still post to it).
+- [ ] Delete any addresses already collected there, or confirm the retention
+      position with counsel.
 
 ---
 
@@ -106,7 +114,9 @@ Follow the prompts. Vercel will give you a live URL instantly.
 ## Post-Deploy Checklist
 
 - [ ] Verify https://hemodash.com loads correctly
-- [ ] Test email signup — submit a test email and confirm it arrives in Formspree
+- [ ] Confirm the live page serves no form — view source and check there is no
+      `<form>`, `<input>`, or `<script>` (Cloudflare Pages caches; a stale edge
+      copy would keep serving the old form after the push)
 - [ ] Test on mobile (iPhone and Android)
 - [ ] Verify hemodynamics.app redirects to hemodash.com
 - [ ] Submit to Google Search Console (search.google.com/search-console) so Google indexes your page
@@ -116,11 +126,22 @@ Follow the prompts. Vercel will give you a live URL instantly.
 
 ## Before launch
 
-- [x] **Intended-use / not-a-medical-device statement** — restored under the
-      waitlist note as `.disclaimer-note` (`DISCLAIMER.short` verbatim from
-      `web/src/lib/legal.ts`). It is a SIBLING of `#formNote`, not a child: the
-      success handler hides the note, and this statement must survive a signup.
-      The audience clause lives in the waitlist note above it.
+- [x] **Intended-use / not-a-medical-device statement** — `.disclaimer-note`,
+      now the closing line of the hero. First two sentences are
+      `DISCLAIMER.short` verbatim from `web/src/lib/legal.ts`; the third carries
+      the audience clause in the wording of `INTENDED_USE` in the same file. That
+      clause used to live in the waitlist note, so it moved here when the form
+      was removed — this is now the page's ONLY audience statement. Do not drop
+      it.
+- [ ] **Google Fonts is loaded from a CDN** (`fonts.googleapis.com` /
+      `fonts.gstatic.com`, `index.html` `<head>`) — the page's only third-party
+      request, and it discloses every visitor's IP address to Google without
+      consent. This is the pattern EU regulators have ruled against. It is a
+      wider exposure than the removed form, since it applies to all visitors
+      rather than opt-ins. Fix by self-hosting the three families (the app
+      already self-hosts them via `next/font`) or by falling back to the system
+      stacks already declared in `--font-display` / `--font-ui` / `--font-mono`.
+      Raise it in the same legal review.
 - [x] **Copyright** — restored as `.copyright-line`, a bare centred line closing the
       page (`COPYRIGHT` verbatim from `web/src/lib/site.ts`). No `<footer>`, no
       surface fill, no border-top: the band and the rule are what read as the page
@@ -133,4 +154,7 @@ Follow the prompts. Vercel will give you a live URL instantly.
   itself is not deployed, so those paths would 404. Wire them in the same change
   that points this domain at the deployed app.
 - **No social links.** Add when the LinkedIn and Bluesky profiles are confirmed live.
-- **No "open the app" CTA.** The page is pre-launch; the waitlist is the only action.
+- **No call to action at all.** The page is pre-launch and, with the waitlist form
+  removed, offers nothing to click. The "Coming Soon" badge in the top bar is the
+  whole status message. Add an "open the app" CTA in the change that points this
+  domain at the deployed app.
