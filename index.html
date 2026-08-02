@@ -13,14 +13,56 @@
   <meta name="twitter:card" content="summary">
   <meta name="theme-color" content="#0e5f58">
   <link rel="icon" href="/icon.svg">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <!-- The app's three families (web/src/app/layout.tsx): Fraunces display serif,
-       Hanken Grotesk UI sans, IBM Plex Mono for numerals. The app self-hosts these
-       via next/font because it must run offline; this page is online-only, so the
-       CDN is fine. -->
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Hanken+Grotesk:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
+    /* ── Typefaces — self-hosted, no third-party request ──────────────────────
+       The app's three families (web/src/app/layout.tsx): Fraunces display serif,
+       Hanken Grotesk UI sans, IBM Plex Mono for numerals. These .woff2 files are
+       the exact binaries the app ships, copied out of its next/font build output,
+       so both surfaces render from identical files.
+
+       These were previously pulled from fonts.googleapis.com. That was removed
+       because a font CDN discloses every visitor's IP address to Google on page
+       load — a disclosure this page has no consent to make, and the one third-
+       party request left after the waitlist form came out. The page now issues
+       none. Do not reintroduce a CDN link here.
+
+       "latin" subset only. Verified sufficient rather than assumed: the only
+       non-ASCII characters this page renders are © · – —, all inside that
+       subset's unicode-range. Fraunces and Hanken Grotesk are variable (one file
+       spans 100–900); IBM Plex Mono is static, and the page uses 400 and 500.
+
+       Licensing: all three are SIL OFL 1.1, which permits self-hosting but
+       requires the copyright and license notice travel with the files. See
+       fonts/OFL-*.txt — keep them alongside the .woff2s. */
+    @font-face {
+      font-family: 'Fraunces';
+      font-style: normal;
+      font-weight: 100 900;
+      font-display: swap;
+      src: url('/fonts/fraunces-latin-var.woff2') format('woff2');
+    }
+    @font-face {
+      font-family: 'Hanken Grotesk';
+      font-style: normal;
+      font-weight: 100 900;
+      font-display: swap;
+      src: url('/fonts/hanken-grotesk-latin-var.woff2') format('woff2');
+    }
+    @font-face {
+      font-family: 'IBM Plex Mono';
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src: url('/fonts/ibm-plex-mono-latin-400.woff2') format('woff2');
+    }
+    @font-face {
+      font-family: 'IBM Plex Mono';
+      font-style: normal;
+      font-weight: 500;
+      font-display: swap;
+      src: url('/fonts/ibm-plex-mono-latin-500.woff2') format('woff2');
+    }
+
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     /* ── HemoDash design tokens ───────────────────────────────────────────────

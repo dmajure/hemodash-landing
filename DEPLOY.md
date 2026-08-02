@@ -2,10 +2,14 @@
 
 ## What this repo is
 
-Two files, no build step:
+A static page, no build step:
 
 - `index.html` — the whole page, self-contained (inline CSS, no script).
 - `icon.svg` — the favicon, copied verbatim from the app's `web/public/icon.svg`.
+- `fonts/` — four self-hosted `.woff2` files and their OFL licenses (see *Fonts*).
+
+The page loads **no third-party resources at all**: a request trace shows exactly
+five same-origin requests — the document and the four fonts.
 
 The design tokens, typefaces, wordmark, and PV-loop animation are **hand-ported
 from the HemoDash app** so the two surfaces read as one product. The `:root` block
@@ -35,6 +39,41 @@ outside this repo and was closed separately:
       stored, so there is no retention question and no data to delete.
 
 Net position: the site has never held anyone's personal data.
+
+## Fonts
+
+Self-hosted from `fonts/`, declared as `@font-face` in the inline `<style>`. They
+were previously fetched from Google's CDN, which disclosed every visitor's IP to
+Google on page load; that was removed on 2026-08-02. **Do not reintroduce a font
+CDN** — it would put a third-party request back on a page that currently makes
+none.
+
+The four files are the **exact binaries the app ships**, copied out of its
+`next/font` build output (`web/.next/static/media/`), not re-downloaded from
+Google. That is deliberate: this page exists to look like the app, so it should
+render from the same files.
+
+| File | Family | Weight |
+| --- | --- | --- |
+| `fraunces-latin-var.woff2` | Fraunces (display serif) | variable 100–900 |
+| `hanken-grotesk-latin-var.woff2` | Hanken Grotesk (UI sans) | variable 100–900 |
+| `ibm-plex-mono-latin-400.woff2` | IBM Plex Mono (numerals) | 400 |
+| `ibm-plex-mono-latin-500.woff2` | IBM Plex Mono (numerals) | 500 |
+
+96 KB total. **`latin` subset only** — verified, not assumed: the only non-ASCII
+characters the page renders are `©` `·` `–` `—`, all inside that subset's
+unicode-range. Re-check this if the copy ever gains an accented character.
+
+One rendering note: `next/font`'s Fraunces has **only a `wght` axis**, while the
+old CDN request (`Fraunces:opsz,wght@9..144,…`) carried the optical-size axis
+too. Large text therefore no longer gets a display-optimized cut, and the H1
+renders a few percent wider than it used to. This is not a regression to fix —
+it is the page converging on how the app actually renders. Re-adding `opsz`
+would make this page differ from the app again.
+
+**Licensing:** all three families are SIL OFL 1.1, which permits self-hosting but
+requires the copyright and license notice travel with any copy of the files.
+`fonts/OFL-*.txt` are the upstream licenses — keep them next to the `.woff2`s.
 
 ---
 
@@ -121,6 +160,12 @@ Follow the prompts. Vercel will give you a live URL instantly.
 - [ ] Confirm the live page serves no form — view source and check there is no
       `<form>`, `<input>`, or `<script>` (Cloudflare Pages caches; a stale edge
       copy would keep serving the old form after the push)
+- [ ] Confirm no third-party requests — open DevTools ▸ Network, hard-reload, and
+      check every row is `hemodash.com`. Nothing should hit `fonts.googleapis.com`
+      or `fonts.gstatic.com`. Expect 5 requests: the document and 4 fonts.
+- [ ] Confirm the fonts actually resolve — `/fonts/*.woff2` should return 200, not
+      404. A 404 falls back to Georgia/Arial silently and still *looks* plausible,
+      so check the status codes rather than trusting the render.
 - [ ] Test on mobile (iPhone and Android)
 - [ ] Verify hemodynamics.app redirects to hemodash.com
 - [ ] Submit to Google Search Console (search.google.com/search-console) so Google indexes your page
@@ -137,15 +182,12 @@ Follow the prompts. Vercel will give you a live URL instantly.
       clause used to live in the waitlist note, so it moved here when the form
       was removed — this is now the page's ONLY audience statement. Do not drop
       it.
-- [ ] **Google Fonts is loaded from a CDN** (`fonts.googleapis.com` /
-      `fonts.gstatic.com`, `index.html` `<head>`) — the page's only third-party
-      request, and it discloses every visitor's IP address to Google without
-      consent. This is the pattern EU regulators have ruled against. It is a
-      wider exposure than the removed form, since it applies to all visitors
-      rather than opt-ins. Fix by self-hosting the three families (the app
-      already self-hosts them via `next/font`) or by falling back to the system
-      stacks already declared in `--font-display` / `--font-ui` / `--font-mono`.
-      Raise it in the same legal review.
+- [x] **Google Fonts CDN removed** (2026-08-02) — `fonts.googleapis.com` /
+      `fonts.gstatic.com` used to be fetched on every page load, disclosing each
+      visitor's IP address to Google without consent (the pattern EU regulators
+      have ruled against). It was a wider exposure than the waitlist form, since
+      it applied to all visitors rather than opt-ins. The three families are now
+      self-hosted — see *Fonts* below. The page issues no third-party request.
 - [x] **Copyright** — restored as `.copyright-line`, a bare centred line closing the
       page (`COPYRIGHT` verbatim from `web/src/lib/site.ts`). No `<footer>`, no
       surface fill, no border-top: the band and the rule are what read as the page
