@@ -24,13 +24,17 @@ keep the pre-launch site from processing personal data before the privacy
 position is settled. Do not reinstate it — here or via Mailchimp, ConvertKit, or
 anything else — until that review clears.
 
-Removing the markup stops new submissions only. Two things live outside this repo
-and must be handled in the Formspree account:
+Removing the markup stopped this page from posting; the endpoint itself lived
+outside this repo and was closed separately:
 
-- [ ] Deactivate or delete form `mqewajzd` so the endpoint stops accepting posts
-      (it is public, and anyone with the URL can still post to it).
-- [ ] Delete any addresses already collected there, or confirm the retention
-      position with counsel.
+- [x] Form `mqewajzd` **deactivated** in the Formspree account (2026-08-02), so
+      the endpoint no longer accepts posts. This mattered independently of the
+      markup: the URL is public and remains in this repo's git history, so anyone
+      could have posted to it directly.
+- [x] **No addresses were ever collected** (confirmed 2026-08-02). Nothing was
+      stored, so there is no retention question and no data to delete.
+
+Net position: the site has never held anyone's personal data.
 
 ---
 
