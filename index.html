@@ -398,34 +398,6 @@
       color: var(--hd-ink);
     }
 
-    /* ── "Built for" strip ── */
-    .audience {
-      text-align: center;
-      padding: 8px 0 32px;
-    }
-    .audience h2 {
-      font-size: 0.6875rem;
-      color: var(--hd-label);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      font-weight: 600;
-      margin-bottom: 14px;
-    }
-    .audience-tags {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 8px;
-    }
-    .audience-tags span {
-      font-size: 0.8125rem;
-      padding: 6px 13px;
-      border-radius: 100px;
-      border: 1px solid var(--hd-border);
-      color: var(--hd-muted);
-      background: var(--hd-surface);
-    }
-
     /* The copyright closes the page. Still no footer element: what read as the
        page ending early was the surface-coloured band and its border-top, not the
        text — so this is a bare centred line on the same canvas, no fill, no rule. */
@@ -547,18 +519,22 @@
           <svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6"/><path d="M9 17h4"/></svg>
         </div>
         <h3>Traceable to the source</h3>
-        <!-- "cited sources", not "primary sources": 591 is the count of distinct
+        <!-- "cited sources", not "primary sources": 792 is the count of distinct
              pubmed: ids in the shipped KB profiles — i.e. the sources reachable
              from a number in the app. The validation program's working library is
              larger (~800 papers filed in reference/), but a paper that backs no
              shipped profile can't be clicked through to, so it doesn't belong in a
              traceability claim. Regenerate with:
-             grep -ohE 'pubmed: *"[0-9]+"' engine/hemodash_engine/kb/*.yaml \
-               | grep -oE "[0-9]+" | sort -u | wc -l -->
+             grep -ohE 'pubmed: *"?[0-9]+' engine/hemodash_engine/kb/*.yaml \
+               | grep -oE "[0-9]+" | sort -u | wc -l
+             (the quote is optional: multi-line citations write pubmed: unquoted).
+             Parameters = KB files excluding _prompts.yaml; interpretations =
+             profiles + comparison_profiles across those files. All three counted
+             on hemodash main 006be89, 2026-10-21. -->
         <p class="evidence-line">
-          <span class="num">34</span> parameters &middot;
-          <span class="num">235</span> context-specific interpretations &middot;
-          <span class="num">591</span> cited sources
+          <span class="num">35</span> parameters &middot;
+          <span class="num">347</span> context-specific interpretations &middot;
+          <span class="num">792</span> cited sources
         </p>
         <p>
           Every threshold and interpretation is traced to the primary literature, with
@@ -589,20 +565,6 @@
           learning. The engine runs entirely in your browser, so it works with no
           signal &mdash; and no patient data leaves the device.
         </p>
-      </div>
-    </section>
-
-    <!-- Audience -->
-    <section class="audience">
-      <h2>Built for</h2>
-      <div class="audience-tags">
-        <span>Cardiology fellows</span>
-        <span>Interventional cardiology</span>
-        <span>Advanced heart failure &amp; transplant</span>
-        <span>Intensivists</span>
-        <span>Cardiac anesthesiology</span>
-        <span>Cath lab teams</span>
-        <span>Critical care nurses</span>
       </div>
     </section>
 
